@@ -144,7 +144,8 @@
 pipeline {
     // Specify that this pipeline should run on an agent labeled 'windows'
     // Make sure your Windows agent in Jenkins has this label.
-    agent { label 'windows' }
+    //agent { label 'windows' }
+    agent any
 
     environment {
         ACR_REGISTRY_NAME = 'mcplculator'
