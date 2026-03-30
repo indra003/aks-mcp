@@ -67,19 +67,94 @@
 //         }
 //     }
 // }
+
+
+// pipeline {
+//     agent any
+
+//     environment {
+//         // Define your Azure Container Registry (ACR) and AKS cluster details
+//         ACR_REGISTRY_NAME = 'mcplculator'
+//         ACR_REGISTRY_URL = "${ACR_REGISTRY_NAME}.azurecr.io"
+//         IMAGE_NAME = 'calculator-app'
+//         IMAGE_TAG = "build-${BUILD_NUMBER}"
+//         AKS_CLUSTER_NAME = 'aks-mcp'
+//         AKS_RESOURCE_GROUP = 'aks-mcp'
+//         // Define a temporary path for the kubeconfig file
+//         KUBECONFIG_PATH = "${env.WORKSPACE}/kubeconfig_build_${BUILD_NUMBER}"
+//     }
+
+//     stages {
+//         stage('Checkout') {
+//             steps {
+//                 checkout scm
+//             }
+//         }
+
+//         stage('Build Docker Image') {
+//             steps {
+//                 script {
+//                     docker.build("${ACR_REGISTRY_URL}/${IMAGE_NAME}:${IMAGE_TAG}", '.')
+//                 }
+//             }
+//         }
+
+//         stage('Login to ACR using Managed Identity') {
+//             steps {
+//                 // Use Azure CLI to login to ACR with the VM's Managed Identity.
+//                 // No username or password needed.
+//                 sh "az login --identity"
+//                 sh "az acr login --name ${ACR_REGISTRY_NAME}"
+//             }
+//         }
+
+//         stage('Push Docker Image') {
+//             steps {
+//                 sh "docker push ${ACR_REGISTRY_URL}/${IMAGE_NAME}:${IMAGE_TAG}"
+//             }
+//         }
+
+//         stage('Deploy to AKS using Managed Identity') {
+//             steps {
+//                 script {
+//                     // This block will now dynamically generate the kubeconfig for this build
+//                     // It authenticates using the Managed Identity.
+//                     sh "az aks get-credentials --resource-group ${AKS_RESOURCE_GROUP} --name ${AKS_CLUSTER_NAME} --file ${KUBECONFIG_PATH}"
+                    
+//                     // The rest of the deployment uses the generated kubeconfig
+//                     sh "sed -i 's|__IMAGE__|${ACR_REGISTRY_URL}/${IMAGE_NAME}:${IMAGE_TAG}|g' kubernetes/deployment.yaml"
+//                     sh "KUBECONFIG=${KUBECONFIG_PATH} kubectl apply -f kubernetes/deployment.yaml"
+//                     sh "KUBECONFIG=${KUBECONFIG_PATH} kubectl apply -f kubernetes/service.yaml"
+//                 }
+//             }
+//         }
+//     }
+
+//     post {
+//         always {
+//             // Clean up the temporary kubeconfig file and logout
+//             sh "rm -f ${KUBECONFIG_PATH}"
+//             sh "docker logout ${ACR_REGISTRY_URL}"
+//         }
+//     }
+// }
+
+
+
 pipeline {
-    agent any
+    // Specify that this pipeline should run on an agent labeled 'windows'
+    // Make sure your Windows agent in Jenkins has this label.
+    agent { label 'windows' }
 
     environment {
-        // Define your Azure Container Registry (ACR) and AKS cluster details
         ACR_REGISTRY_NAME = 'mcplculator'
         ACR_REGISTRY_URL = "${ACR_REGISTRY_NAME}.azurecr.io"
         IMAGE_NAME = 'calculator-app'
         IMAGE_TAG = "build-${BUILD_NUMBER}"
         AKS_CLUSTER_NAME = 'aks-mcp'
         AKS_RESOURCE_GROUP = 'aks-mcp'
-        // Define a temporary path for the kubeconfig file
-        KUBECONFIG_PATH = "${env.WORKSPACE}/kubeconfig_build_${BUILD_NUMBER}"
+        // Use Windows-style path for the kubeconfig
+        KUBECONFIG_PATH = "${env.WORKSPACE}\\kubeconfig_build_${BUILD_NUMBER}"
     }
 
     stages {
@@ -92,6 +167,8 @@ pipeline {
         stage('Build Docker Image') {
             steps {
                 script {
+                    // This command remains the same, but requires the Docker Pipeline plugin
+                    // and Docker running on the Windows agent.
                     docker.build("${ACR_REGISTRY_URL}/${IMAGE_NAME}:${IMAGE_TAG}", '.')
                 }
             }
@@ -99,30 +176,30 @@ pipeline {
 
         stage('Login to ACR using Managed Identity') {
             steps {
-                // Use Azure CLI to login to ACR with the VM's Managed Identity.
-                // No username or password needed.
-                sh "az login --identity"
-                sh "az acr login --name ${ACR_REGISTRY_NAME}"
+                // Use 'bat' for Windows batch commands
+                bat 'az login --identity'
+                bat "az acr login --name ${ACR_REGISTRY_NAME}"
             }
         }
 
         stage('Push Docker Image') {
             steps {
-                sh "docker push ${ACR_REGISTRY_URL}/${IMAGE_NAME}:${IMAGE_TAG}"
+                bat "docker push ${ACR_REGISTRY_URL}/${IMAGE_NAME}:${IMAGE_TAG}"
             }
         }
 
         stage('Deploy to AKS using Managed Identity') {
             steps {
                 script {
-                    // This block will now dynamically generate the kubeconfig for this build
-                    // It authenticates using the Managed Identity.
-                    sh "az aks get-credentials --resource-group ${AKS_RESOURCE_GROUP} --name ${AKS_CLUSTER_NAME} --file ${KUBECONFIG_PATH}"
+                    // Generate the kubeconfig file using 'bat'
+                    bat "az aks get-credentials --resource-group ${AKS_RESOURCE_GROUP} --name ${AKS_CLUSTER_NAME} --file ${KUBECONFIG_PATH}"
                     
-                    // The rest of the deployment uses the generated kubeconfig
-                    sh "sed -i 's|__IMAGE__|${ACR_REGISTRY_URL}/${IMAGE_NAME}:${IMAGE_TAG}|g' kubernetes/deployment.yaml"
-                    sh "KUBECONFIG=${KUBECONFIG_PATH} kubectl apply -f kubernetes/deployment.yaml"
-                    sh "KUBECONFIG=${KUBECONFIG_PATH} kubectl apply -f kubernetes/service.yaml"
+                    // Replace the Linux 'sed' command with a Windows PowerShell command
+                    powershell "(Get-Content .\\kubernetes\\deployment.yaml) | ForEach-Object { $_ -replace '__IMAGE__', '${ACR_REGISTRY_URL}/${IMAGE_NAME}:${IMAGE_TAG}' } | Set-Content .\\kubernetes\\deployment.yaml"
+
+                    // Use 'bat' and set the KUBECONFIG environment variable for the commands
+                    bat "set KUBECONFIG=${KUBECONFIG_PATH} && kubectl apply -f kubernetes\\deployment.yaml"
+                    bat "set KUBECONFIG=${KUBECONFIG_PATH} && kubectl apply -f kubernetes\\service.yaml"
                 }
             }
         }
@@ -130,9 +207,10 @@ pipeline {
 
     post {
         always {
-            // Clean up the temporary kubeconfig file and logout
-            sh "rm -f ${KUBECONFIG_PATH}"
-            sh "docker logout ${ACR_REGISTRY_URL}"
+            // Clean up using 'bat'
+            bat "del /F /Q ${KUBECONFIG_PATH}"
+            bat "docker logout ${ACR_REGISTRY_URL}"
         }
     }
 }
+
