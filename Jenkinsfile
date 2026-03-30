@@ -72,12 +72,12 @@ pipeline {
 
     environment {
         // Define your Azure Container Registry (ACR) and AKS cluster details
-        ACR_REGISTRY_NAME = 'yourACRRegistryName'
+        ACR_REGISTRY_NAME = 'mcplculator'
         ACR_REGISTRY_URL = "${ACR_REGISTRY_NAME}.azurecr.io"
         IMAGE_NAME = 'calculator-app'
         IMAGE_TAG = "build-${BUILD_NUMBER}"
-        AKS_CLUSTER_NAME = 'yourAKSClusterName'
-        AKS_RESOURCE_GROUP = 'yourAKSResourceGroup'
+        AKS_CLUSTER_NAME = 'aks-mcp'
+        AKS_RESOURCE_GROUP = 'aks-mcp'
         // Define a temporary path for the kubeconfig file
         KUBECONFIG_PATH = "${env.WORKSPACE}/kubeconfig_build_${BUILD_NUMBER}"
     }
