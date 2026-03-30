@@ -1,0 +1,251 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Calculator App</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            min-height: 100vh;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            font-family: 'Arial', sans-serif;
+        }
+
+        .calculator {
+            background: white;
+            border-radius: 20px;
+            box-shadow: 0 20px 60px rgba(0, 0, 0, 0.3);
+            width: 100%;
+            max-width: 400px;
+            padding: 20px;
+        }
+
+        .display {
+            background: #2d3436;
+            color: #00ff00;
+            font-size: 2.5rem;
+            padding: 20px;
+            border-radius: 10px;
+            text-align: right;
+            margin-bottom: 20px;
+            min-height: 60px;
+            word-wrap: break-word;
+            word-break: break-all;
+            font-weight: bold;
+        }
+
+        .buttons {
+            display: grid;
+            grid-template-columns: repeat(4, 1fr);
+            gap: 10px;
+        }
+
+        button {
+            padding: 20px;
+            font-size: 1.5rem;
+            border: none;
+            border-radius: 10px;
+            cursor: pointer;
+            font-weight: bold;
+            transition: all 0.3s ease;
+        }
+
+        button:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 5px 15px rgba(0, 0, 0, 0.2);
+        }
+
+        button:active {
+            transform: translateY(0);
+        }
+
+        .number {
+            background: #ecf0f1;
+            color: #2d3436;
+        }
+
+        .number:hover {
+            background: #bdc3c7;
+        }
+
+        .operator {
+            background: #ff9800;
+            color: white;
+        }
+
+        .operator:hover {
+            background: #e68900;
+        }
+
+        .equals {
+            background: #4caf50;
+            color: white;
+            grid-column: span 2;
+        }
+
+        .equals:hover {
+            background: #45a049;
+        }
+
+        .clear {
+            background: #f44336;
+            color: white;
+        }
+
+        .clear:hover {
+            background: #da190b;
+        }
+
+        .backspace {
+            background: #ff5722;
+            color: white;
+        }
+
+        .backspace:hover {
+            background: #e64a19;
+        }
+
+        .sqrt {
+            background: #2196f3;
+            color: white;
+        }
+
+        .sqrt:hover {
+            background: #0b7dda;
+        }
+
+        .decimal {
+            background: #ecf0f1;
+            color: #2d3436;
+        }
+
+        .decimal:hover {
+            background: #bdc3c7;
+        }
+    </style>
+</head>
+<body>
+    <div class="calculator">
+        <div class="display" id="display">0</div>
+        <div class="buttons">
+            <button class="clear" onclick="clearDisplay()">C</button>
+            <button class="backspace" onclick="backspace()">←</button>
+            <button class="operator" onclick="handleOperator('%')">%</button>
+            <button class="operator" onclick="handleOperator('÷')">÷</button>
+
+            <button class="number" onclick="appendNumber('7')">7</button>
+            <button class="number" onclick="appendNumber('8')">8</button>
+            <button class="number" onclick="appendNumber('9')">9</button>
+            <button class="operator" onclick="handleOperator('×')">×</button>
+
+            <button class="number" onclick="appendNumber('4')">4</button>
+            <button class="number" onclick="appendNumber('5')">5</button>
+            <button class="number" onclick="appendNumber('6')">6</button>
+            <button class="operator" onclick="handleOperator('-')">-</button>
+
+            <button class="number" onclick="appendNumber('1')">1</button>
+            <button class="number" onclick="appendNumber('2')">2</button>
+            <button class="number" onclick="appendNumber('3')">3</button>
+            <button class="operator" onclick="handleOperator('+')">+</button>
+
+            <button class="number" style="grid-column: span 2;" onclick="appendNumber('0')">0</button>
+            <button class="decimal" onclick="appendNumber('.')">.</button>
+            <button class="equals" onclick="calculate()">=</button>
+
+            <button class="sqrt" style="grid-column: span 4;" onclick="calculateSqrt()">√ Square Root</button>
+        </div>
+    </div>
+
+    <script>
+        let display = document.getElementById('display');
+        let firstNumber = 0;
+        let operator = '';
+        let isNewNumber = true;
+
+        function appendNumber(num) {
+            if (isNewNumber) {
+                display.textContent = num;
+                isNewNumber = false;
+            } else {
+                if (display.textContent === '0') {
+                    display.textContent = num;
+                } else {
+                    display.textContent += num;
+                }
+            }
+        }
+
+        function handleOperator(op) {
+            let currentNumber = parseFloat(display.textContent);
+
+            if (operator !== '' && !isNewNumber) {
+                currentNumber = performCalculation(firstNumber, currentNumber, operator);
+                display.textContent = currentNumber;
+            }
+
+            firstNumber = currentNumber;
+            operator = op;
+            isNewNumber = true;
+        }
+
+        function calculate() {
+            if (operator === '') return;
+
+            let secondNumber = parseFloat(display.textContent);
+            let result = performCalculation(firstNumber, secondNumber, operator);
+
+            display.textContent = result;
+            operator = '';
+            isNewNumber = true;
+        }
+
+        function performCalculation(first, second, op) {
+            switch (op) {
+                case '+':
+                    return first + second;
+                case '-':
+                    return first - second;
+                case '×':
+                    return first * second;
+                case '÷':
+                    return second !== 0 ? first / second : 0;
+                case '%':
+                    return first % second;
+                default:
+                    return 0;
+            }
+        }
+
+        function calculateSqrt() {
+            let number = parseFloat(display.textContent);
+            display.textContent = Math.sqrt(number);
+            isNewNumber = true;
+        }
+
+        function clearDisplay() {
+            display.textContent = '0';
+            firstNumber = 0;
+            operator = '';
+            isNewNumber = true;
+        }
+
+        function backspace() {
+            let text = display.textContent;
+            if (text.length > 1) {
+                display.textContent = text.slice(0, -1);
+            } else {
+                display.textContent = '0';
+            }
+        }
+    </script>
+</body>
+</html>
