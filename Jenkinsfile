@@ -52,7 +52,7 @@ pipeline {
                     
                     // Login to ACR using Service Principal credentials
                     //bat "az acr login --name ${ACR_REGISTRY_NAME} --username %AZURE_CLIENT_ID% --password %AZURE_CLIENT_SECRET%"
-                    bat "az acr login --name ${ACR_REGISTRY_NAME} -u ${env.ACR_USERNAME} -p ${env.ACR_PASSWORD}
+                    bat "az acr login --name ${ACR_REGISTRY_NAME} -u ${env.ACR_USERNAME} -p ${env.ACR_PASSWORD}"
                 }
             }
         }
