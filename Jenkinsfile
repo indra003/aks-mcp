@@ -16,6 +16,10 @@ pipeline {
         // Service Principal environment variables
         AZURE_TENANT_ID = credentials('azure-tenant-id')
         AZURE_SUBSCRIPTION_ID = credentials('azure-subscription-id')
+
+        ACR_USERNAME='dd0a7370-c013-4057-b2a3-b7a3ed893908'
+        ACR_PASSWORD='5BS8Q~ZshoKb9yODnUvPJDCDBtswLJ-pGSIMXaQl'
+        AZURE_SUBSCRIPTION_ID='8999e91c-2bbd-4df2-b54d-171fe6db06c5'
     }
 
     stages {
@@ -40,11 +44,15 @@ pipeline {
                 // Use Jenkins credentials for Service Principal
                 withCredentials([usernamePassword(credentialsId: 'azure-service-principal', usernameVariable: 'AZURE_CLIENT_ID', passwordVariable: 'AZURE_CLIENT_SECRET')]) {
                     // Login to Azure using Service Principal
-                    bat 'az login --service-principal -u %AZURE_CLIENT_ID% -p %AZURE_CLIENT_SECRET% --tenant %AZURE_TENANT_ID%'
-                    bat 'az account set --subscription %AZURE_SUBSCRIPTION_ID%'
+                    //bat 'az login --service-principal -u %AZURE_CLIENT_ID% -p %AZURE_CLIENT_SECRET% --tenant %AZURE_TENANT_ID%'
+                    bat "az login --service-principal -u ${env.ACR_USERNAME} -p ${env.ACR_PASSWORD} --tenant yourTenantID"
+
+                    //bat 'az account set --subscription %AZURE_SUBSCRIPTION_ID%'
+                    bat "az account set --subscription ${env.AZURE_SUBSCRIPTION_ID}"
                     
                     // Login to ACR using Service Principal credentials
-                    bat "az acr login --name ${ACR_REGISTRY_NAME} --username %AZURE_CLIENT_ID% --password %AZURE_CLIENT_SECRET%"
+                    //bat "az acr login --name ${ACR_REGISTRY_NAME} --username %AZURE_CLIENT_ID% --password %AZURE_CLIENT_SECRET%"
+                    bat "az acr login --name ${ACR_REGISTRY_NAME} -u ${env.ACR_USERNAME} -p ${env.ACR_PASSWORD}
                 }
             }
         }
