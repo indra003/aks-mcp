@@ -14,7 +14,7 @@ pipeline {
         // Use Windows-style path for the kubeconfig
         KUBECONFIG_PATH = "${env.WORKSPACE}\\kubeconfig_build_${BUILD_NUMBER}"
         // Service Principal environment variables
-        ACR_USERNAME = 'dd0a7370-c013-4057-b2a3-b7a3ed893908'
+        ACR_USERNAME = '6f89c33a-8e5a-49ac-8416-418185264d32'
         ACR_PASSWORD = '5BS8Q~ZshoKb9yODnUvPJDCDBtswLJ-pGSIMXaQl'
         AZURE_SUBSCRIPTION_ID = '8999e91c-2bbd-4df2-b54d-171fe6db06c5'
         AZURE_TENANT_ID = '8800fb6f-d482-4358-a81a-bc09f432527d'
