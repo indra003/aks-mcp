@@ -15,7 +15,7 @@ pipeline {
         KUBECONFIG_PATH = "${env.WORKSPACE}\\kubeconfig_build_${BUILD_NUMBER}"
         // Service Principal environment variables
         AZURE_TENANT_ID = credentials('azure-tenant-id')
-        AZURE_SUBSCRIPTION_ID = credentials('azure-subscription-id')
+        //AZURE_SUBSCRIPTION_ID = credentials('azure-subscription-id')
 
         ACR_USERNAME='dd0a7370-c013-4057-b2a3-b7a3ed893908'
         ACR_PASSWORD='5BS8Q~ZshoKb9yODnUvPJDCDBtswLJ-pGSIMXaQl'
