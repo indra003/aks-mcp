@@ -17,7 +17,7 @@ pipeline {
         ACR_USERNAME = 'dd0a7370-c013-4057-b2a3-b7a3ed893908'
         ACR_PASSWORD = '5BS8Q~ZshoKb9yODnUvPJDCDBtswLJ-pGSIMXaQl'
         AZURE_SUBSCRIPTION_ID = '8999e91c-2bbd-4df2-b54d-171fe6db06c5'
-        AZURE_TENANT_ID = 'yourTenantID'
+        AZURE_TENANT_ID = '8800fb6f-d482-4358-a81a-bc09f432527d'
     }
 
     stages {
