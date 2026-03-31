@@ -13,6 +13,9 @@ pipeline {
         AKS_RESOURCE_GROUP = 'aks-mcp'
         // Use Windows-style path for the kubeconfig
         KUBECONFIG_PATH = "${env.WORKSPACE}\\kubeconfig_build_${BUILD_NUMBER}"
+        // Service Principal environment variables
+        AZURE_TENANT_ID = credentials('azure-tenant-id')
+        AZURE_SUBSCRIPTION_ID = credentials('azure-subscription-id')
     }
 
     stages {
@@ -32,11 +35,17 @@ pipeline {
             }
         }
 
-        stage('Login to ACR using Managed Identity') {
+        stage('Login to ACR using Service Principal') {
             steps {
-                // Use 'bat' for Windows batch commands
-                bat 'az login --identity'
-                bat "az acr login --name ${ACR_REGISTRY_NAME}"
+                // Use Jenkins credentials for Service Principal
+                withCredentials([usernamePassword(credentialsId: 'azure-service-principal', usernameVariable: 'AZURE_CLIENT_ID', passwordVariable: 'AZURE_CLIENT_SECRET')]) {
+                    // Login to Azure using Service Principal
+                    bat 'az login --service-principal -u %AZURE_CLIENT_ID% -p %AZURE_CLIENT_SECRET% --tenant %AZURE_TENANT_ID%'
+                    bat 'az account set --subscription %AZURE_SUBSCRIPTION_ID%'
+                    
+                    // Login to ACR using Service Principal credentials
+                    bat "az acr login --name ${ACR_REGISTRY_NAME} --username %AZURE_CLIENT_ID% --password %AZURE_CLIENT_SECRET%"
+                }
             }
         }
 
@@ -46,18 +55,24 @@ pipeline {
             }
         }
 
-        stage('Deploy to AKS using Managed Identity') {
+        stage('Deploy to AKS using Service Principal') {
             steps {
                 script {
-                    // Generate the kubeconfig file using 'bat'
-                    bat "az aks get-credentials --resource-group ${AKS_RESOURCE_GROUP} --name ${AKS_CLUSTER_NAME} --file ${KUBECONFIG_PATH}"
-                    
-                    // Replace the Linux 'sed' command with a Windows PowerShell command
-                    powershell "(Get-Content .\\kubernetes\\deployment.yaml) | ForEach-Object { $_ -replace '__IMAGE__', '${ACR_REGISTRY_URL}/${IMAGE_NAME}:${IMAGE_TAG}' } | Set-Content .\\kubernetes\\deployment.yaml"
+                    withCredentials([usernamePassword(credentialsId: 'azure-service-principal', usernameVariable: 'AZURE_CLIENT_ID', passwordVariable: 'AZURE_CLIENT_SECRET')]) {
+                        // Login to Azure using Service Principal
+                        bat 'az login --service-principal -u %AZURE_CLIENT_ID% -p %AZURE_CLIENT_SECRET% --tenant %AZURE_TENANT_ID%'
+                        bat 'az account set --subscription %AZURE_SUBSCRIPTION_ID%'
+                        
+                        // Generate the kubeconfig file using 'bat'
+                        bat "az aks get-credentials --resource-group ${AKS_RESOURCE_GROUP} --name ${AKS_CLUSTER_NAME} --file ${KUBECONFIG_PATH}"
+                        
+                        // Replace the Linux 'sed' command with a Windows PowerShell command
+                        powershell "(Get-Content .\\kubernetes\\deployment.yaml) | ForEach-Object { $_ -replace '__IMAGE__', '${ACR_REGISTRY_URL}/${IMAGE_NAME}:${IMAGE_TAG}' } | Set-Content .\\kubernetes\\deployment.yaml"
 
-                    // Use 'bat' and set the KUBECONFIG environment variable for the commands
-                    bat "set KUBECONFIG=${KUBECONFIG_PATH} && kubectl apply -f kubernetes\\deployment.yaml"
-                    bat "set KUBECONFIG=${KUBECONFIG_PATH} && kubectl apply -f kubernetes\\service.yaml"
+                        // Use 'bat' and set the KUBECONFIG environment variable for the commands
+                        bat "set KUBECONFIG=${KUBECONFIG_PATH} && kubectl apply -f kubernetes\\deployment.yaml"
+                        bat "set KUBECONFIG=${KUBECONFIG_PATH} && kubectl apply -f kubernetes\\service.yaml"
+                    }
                 }
             }
         }
